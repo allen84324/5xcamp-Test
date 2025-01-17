@@ -1,47 +1,36 @@
-<script setup>
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
-</script>
+<script setup></script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-    </div>
-  </header>
-
-  <main>
-    <TheWelcome />
-  </main>
+	<div>
+		<div>
+			<h1>台灣銀行代碼查詢</h1>
+			<div>
+				<h3>銀行名稱</h3>
+				<input type="text" />
+			</div>
+			<div>
+				<h3>分行名稱</h3>
+				<input type="text" />
+			</div>
+			<p>可使用下拉選單或直接輸入關鍵字查詢</p>
+		</div>
+		<div>
+			<h2>{銀行名稱}</h2>
+			<div>
+				<h3>分行代碼:{XX}</h3>
+			</div>
+			<div>
+				<h3>地址：{XX}</h3>
+			</div>
+			<div>
+				<h3>電話：{XX}</h3>
+			</div>
+		</div>
+		<div>
+			<button>重新查詢</button>
+			<button>複製此頁面連結</button>
+		</div>
+	</div>
 </template>
 
-<style scoped>
-header {
-  line-height: 1.5;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-}
-</style>
+<style scoped></style>
