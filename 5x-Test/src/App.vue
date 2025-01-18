@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
-const API_URL = import.meta.env.VITE_API_URL
+
 const banks = ref([])
 const branches = ref([])
 
@@ -22,7 +22,7 @@ const copyLink = () => {
 
 onMounted(async () => {
 	try {
-		const response = await axios.get(`${API_URL}/api/banks`)
+		const response = await axios.get(`/api/banks`)
 		banks.value = response.data.bank.sort((a, b) => {
 			const codeA = parseInt(a.code, 10)
 			const codeB = parseInt(b.code, 10)
@@ -66,9 +66,7 @@ watch(selectedBank, async (newBankCode) => {
 
 const loadBranches = async (bankCode) => {
 	try {
-		const response = await axios.get(
-			`${API_URL}/api/banks/${bankCode}/branches`
-		)
+		const response = await axios.get(`/api/banks/${bankCode}/branches`)
 		branches.value = response.data.branches
 	} catch (error) {
 		console.error('無法獲取分行資料：', error)
