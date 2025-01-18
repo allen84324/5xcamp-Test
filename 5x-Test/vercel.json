@@ -1,0 +1,8 @@
+{
+	"rewrites": [
+		{
+			"source": "/api/(.*)",
+			"destination": "https://bank.5xcamp.us/api/$1"
+		}
+	]
+}
