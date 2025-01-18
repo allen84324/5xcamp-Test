@@ -1,18 +1,17 @@
-import { fileURLToPath, URL } from 'node:url'
-
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    vue(),
-    vueDevTools(),
-  ],
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
-    },
-  },
+	plugins: [vue()],
+	server: {
+		cors: true,
+		proxy: {
+			'/api': {
+				target: 'https://bank.5xcamp.us',
+				changeOrigin: true,
+				secure: false,
+				pathRewrite: (path) => path.replace(/^\/api/, ''),
+			},
+		},
+	},
 })
