@@ -3,6 +3,10 @@
 		{
 			"source": "/api/(.*)",
 			"destination": "https://bank.5xcamp.us/api/$1"
+		},
+		{
+			"source": "/(.*)",
+			"destination": "/index.html"
 		}
 	]
 }

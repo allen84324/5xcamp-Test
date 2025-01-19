@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 
 const banks = ref([])
@@ -8,11 +9,15 @@ const branches = ref([])
 const selectedBank = ref('')
 const selectedBranch = ref(null)
 const linkCopied = ref(false)
+const copied = ref(false)
+
+const route = useRoute()
+const router = useRouter()
+
 const copyLink = () => {
-	if (typeof navigator !== 'undefined' && navigator.clipboard) {
+	if (navigator.clipboard) {
 		navigator.clipboard.writeText(window.location.href).then(() => {
 			linkCopied.value = true
-
 			setTimeout(() => {
 				linkCopied.value = false
 			}, 2000)
@@ -20,27 +25,55 @@ const copyLink = () => {
 	}
 }
 
-onMounted(async () => {
+const loadBranches = async (bankCode) => {
 	try {
-		const response = await axios.get(`/api/banks`)
-		banks.value = response.data.bank.sort((a, b) => {
-			const codeA = parseInt(a.code, 10)
-			const codeB = parseInt(b.code, 10)
-			if (codeA === codeB) {
-				return a.title.localeCompare(b.title) // 如果代碼相同，按名稱字母順序排序
-			}
-			return codeA - codeB
-		})
+		const response = await axios.get(`/api/banks/${bankCode}/branches`)
+		branches.value = response.data.branches
+	} catch (error) {
+		console.error('無法獲取分行資料：')
+	}
+}
 
-		// 檢查 URL 中是否有已選擇的銀行和分行
-		const pathParts = window.location.pathname.split('/').filter(Boolean)
-		if (pathParts.length === 3) {
-			const bankCodeFromUrl = pathParts[0]
-			const branchCodeFromUrl = pathParts[1]
-			const branchNameFromUrl = decodeURIComponent(
-				pathParts[2].replace('.html', '')
-			)
+const copyCode = () => {
+	if (selectedBranch.value) {
+		navigator.clipboard.writeText(selectedBranch.value.code)
+		copied.value = true
+		setTimeout(() => {
+			copied.value = false
+		}, 2000)
+	}
+}
 
+const resetSelection = () => {
+	selectedBank.value = ''
+	selectedBranch.value = null
+	branches.value = []
+	router.push({ name: 'Home' })
+}
+
+onMounted(async () => {
+	const response = await axios.get(`/api/banks`)
+	banks.value = response.data.bank.sort((a, b) => {
+		const codeA = parseInt(a.code, 10)
+		const codeB = parseInt(b.code, 10)
+		if (codeA === codeB) {
+			return a.title.localeCompare(b.title)
+		}
+		return codeA - codeB
+	})
+
+	const bankCodeFromUrl = route.params.bankCode
+	const branchCodeFromUrl = route.params.branchCode
+	let branchNameFromUrl = route.params.branchName
+
+	if (branchNameFromUrl) {
+		branchNameFromUrl = decodeURIComponent(
+			branchNameFromUrl.replace('.html', '')
+		)
+	}
+
+	try {
+		if (bankCodeFromUrl && branchCodeFromUrl && branchNameFromUrl) {
 			selectedBank.value = bankCodeFromUrl
 			await loadBranches(bankCodeFromUrl)
 
@@ -49,11 +82,10 @@ onMounted(async () => {
 			)
 		}
 	} catch (error) {
-		console.error('無法獲取銀行名稱：', error)
+		console.error('無法獲取銀行名稱：')
 	}
 })
 
-// 當選擇銀行時，根據銀行代碼代入該銀行的分行資料
 watch(selectedBank, async (newBankCode) => {
 	if (!newBankCode) {
 		branches.value = []
@@ -64,41 +96,13 @@ watch(selectedBank, async (newBankCode) => {
 	await loadBranches(newBankCode)
 })
 
-const loadBranches = async (bankCode) => {
-	try {
-		const response = await axios.get(`/api/banks/${bankCode}/branches`)
-		branches.value = response.data.branches
-	} catch (error) {
-		console.error('無法獲取分行資料：', error)
-	}
-}
-
 watch(selectedBranch, (newBranch) => {
 	if (newBranch) {
-		const url = `${window.location.origin}/${selectedBank.value}/${
-			newBranch.code
-		}/${encodeURIComponent(newBranch.title)}.html`
-		window.history.pushState({}, '', url)
+		const branchNameEncoded = encodeURIComponent(newBranch.title)
+		const formattedPath = `/${selectedBank.value}/${newBranch.code}/${newBranch.title}.html`
+		router.push({ path: formattedPath })
 	}
 })
-
-const resetSelection = () => {
-	selectedBank.value = ''
-	selectedBranch.value = null
-	branches.value = []
-	window.history.pushState({}, '', window.location.origin)
-}
-
-const copied = ref(false)
-
-const copyCode = () => {
-	navigator.clipboard.writeText(selectedBranch.value.code)
-	copied.value = true
-
-	setTimeout(() => {
-		copied.value = false
-	}, 2000)
-}
 </script>
 
 <template>
@@ -108,7 +112,7 @@ const copyCode = () => {
 			<div>
 				<h3 class="subtitle">銀行名稱</h3>
 				<select v-model="selectedBank" class="select">
-					<option value="">請選擇銀行名稱</option>
+					<option value="" disabled>請選擇銀行名稱</option>
 					<option v-for="bank in banks" :key="bank.code" :value="bank.code">
 						{{ bank.code }} - {{ bank.title }}
 					</option>
@@ -116,8 +120,12 @@ const copyCode = () => {
 			</div>
 			<div>
 				<h3 class="subtitle">分行名稱</h3>
-				<select v-model="selectedBranch" class="select">
-					<option value="">請選擇分行名稱</option>
+				<select
+					v-model="selectedBranch"
+					class="select"
+					:disabled="!selectedBank"
+				>
+					<option value="" disabled>請選擇分行名稱</option>
 					<option v-for="branch in branches" :key="branch.code" :value="branch">
 						{{ branch.title }}
 					</option>
